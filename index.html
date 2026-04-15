@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>PharmRevise — MPharm Flashcards</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── LOGIN OVERLAY ──────────────────────────────────── -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">Pharm<span>Revise</span></div>
+    <p class="login-sub">MPharm GPhC Revision · Enter your name to save progress</p>
+    <input class="login-input" id="login-name-input" type="text" placeholder="Your name (e.g. Emi)" maxlength="30" onkeydown="handleLoginKey(event)">
+    <button class="login-btn" onclick="loginAs(document.getElementById('login-name-input').value)">Start Studying →</button>
+    <div class="login-user-list" id="login-user-list" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ── SETTINGS MODAL ─────────────────────────────────── -->
+<div class="modal-overlay" id="settings-modal" style="display:none" onclick="if(event.target===this)closeSettings()">
+  <div class="modal-card">
+    <div class="modal-title">⚙️ Study Settings</div>
+    <label class="modal-label" for="exam-date-input">GPhC Exam Date</label>
+    <input class="modal-input" id="exam-date-input" type="date">
+    <p style="font-size:12px;color:var(--text3);margin-bottom:14px;">Sets your daily new card quota based on time remaining.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
+      <button class="btn-primary" onclick="saveSettingsFromModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── NAV ────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">Pharm<span>Revise</span></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="nav-user" id="nav-user-btn" style="display:none" onclick="showLogin()">👤</button>
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showPage('study')">Study</button>
+        <button class="nav-tab" onclick="showPage('browse')">Browse</button>
+        <button class="nav-tab" onclick="showPage('stats')">Stats</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── STUDY PAGE ─────────────────────────────────────── -->
+<div id="page-study" class="page active">
+  <div class="streak-bar" id="streak-bar">
+    <div class="streak-icon">🔥</div>
+    <div class="streak-text">
+      <strong id="streak-text">0 day streak</strong>
+      <small id="streak-sub">Study today to start your streak</small>
+      <div class="streak-dots" id="streak-dots"></div>
+    </div>
+  </div>
+
+  <!-- Exam countdown banner (hidden until exam date set) -->
+  <div class="exam-banner" id="exam-banner" style="display:none">
+    <div>
+      <span class="exam-days" id="exam-days"></span>
+      <span class="exam-quota" id="exam-quota"></span>
+    </div>
+    <button class="exam-settings-btn" onclick="openSettings()">Edit date</button>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-num" id="cnt-new">0</div><div class="stat-label">New</div></div>
+    <div class="stat-card"><div class="stat-num" id="cnt-learning">0</div><div class="stat-label">Learning</div></div>
+    <div class="stat-card"><div class="stat-num" id="cnt-mastered">0</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-card"><div class="stat-num" id="cnt-due">0</div><div class="stat-label">Due today</div></div>
+  </div>
+  <div class="prog-wrap"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="pill-row" id="mod-pills"></div>
+  <div id="study-area"></div>
+
+  <!-- Settings shortcut -->
+  <div style="text-align:center;margin-top:16px;">
+    <button class="action-btn" onclick="openSettings()" style="font-size:12px;color:var(--text3);">⚙️ Set exam date</button>
+  </div>
+</div>
+
+<!-- ── BROWSE PAGE ────────────────────────────────────── -->
+<div id="page-browse" class="page">
+  <div class="search-wrap">
+    <input class="search-input" type="search" placeholder="Search cards…" oninput="onBrowseSearch(this.value)" autocomplete="off">
+  </div>
+  <div style="font-size:12px;color:var(--text3);margin-bottom:8px;" id="browse-result-count"></div>
+  <div class="filter-row" id="browse-filters"></div>
+  <div class="card-list" id="browse-list"></div>
+</div>
+
+<!-- ── STATS PAGE ─────────────────────────────────────── -->
+<div id="page-stats" class="page">
+  <div class="section-title">Overall progress</div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-num" id="s-total">0</div><div class="stat-label">Total</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-mastered">0</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-learning">0</div><div class="stat-label">Learning</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-pct">0%</div><div class="stat-label">Complete</div></div>
+  </div>
+  <div class="section-title">By module</div>
+  <div class="module-progress-list" id="module-progress"></div>
+  <button class="reset-btn" onclick="resetConfirm()">Reset all progress</button>
+</div>
+
+<!-- ── SCRIPTS (order matters: cards before engine) ───── -->
+<script src="cards.js"></script>
+<script src="srs-engine.js"></script>
+
+</body>
+</html>
